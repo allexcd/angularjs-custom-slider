@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta name="description" content="AngularJS Custom Slider">
+    <meta name="keywords" content="AngularJS, directive, slider">
+    <meta name="author" content="Alexandru Costin Dumitru (AlexCD)">
+    <meta charset="UTF-8">
+    <title>AngularJS Custom Slider</title>
+
+    <link rel="stylesheet" type="text/css" href="css/styles.css" />
+
+    <script type="text/javascript" src="js/lib/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="js/lib/angular.min.js"></script>
+
+    <!--controllers-->
+    <script type="text/javascript" src="js/controllers/customJsSliderCtrl.js"></script>
+
+    <!--directives-->
+    <script type="text/javascript" src="js/directives/integers.js"></script>
+    <script type="text/javascript" src="js/directives/checkRange.js"></script>
+    <script type="text/javascript" src="js/directives/customJsSlider.js"></script>
+
+    <!--modules-->
+    <script type="text/javascript" src="js/modules/controllers.js"></script>
+    <script type="text/javascript" src="js/modules/directives.js"></script>
+    <script type="text/javascript" src="js/modules/modules.js"></script>
+
+</head>
+<body ng-app="modules" ng-controller="customJsSliderCtrl">
+
+    <form name="rangeForm">
+        <input type="tel" name="range" ng-model="sliderLimits.rangeInterval" min="sliderLimits.minVal" max="sliderLimits.maxVal" integers check-range required />
+
+        <custom-js-slider range-interval="sliderLimits.rangeInterval" min-range="sliderLimits.minVal" max-range="sliderLimits.maxVal" range-increment-flag="true"></custom-js-slider>
+    </form>
+
+    <div>Valid range: {{sliderLimits.minVal}} - {{sliderLimits.maxVal}}</div>
+
+    <div ng-show="!rangeForm.$valid">
+        <span>The valid range must be between</span>
+        <span>{{sliderLimits.minVal}} and {{sliderLimits.maxVal}}</span>
+    </div>
+
+</body>
+</html>

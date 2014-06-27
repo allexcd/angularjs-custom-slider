@@ -1,7 +1,7 @@
 /*Created by AlexCD on 26.02.2014*/
 /*global $, window, document*/
 /*jslint todo: true*/
-function CustomJsSlider() {
+function JsSlider() {
     "use strict";
     return {
         restrict: 'E',
@@ -19,7 +19,6 @@ function CustomJsSlider() {
             + '</div>'
             + '</div>',
         link: function (scope, element, attr, ctrl) {
-
             //SLIDER SETUP
             //define directive variables
             var rangeInterval, minRange, maxRange,
@@ -40,7 +39,7 @@ function CustomJsSlider() {
             handler.style.top = (handlerTrack.offsetHeight / 2) - (handler.offsetHeight / 2) + 'px';
             //positioning the pointer in the center of the handler
             handlerPointer.style.left = (handler.clientWidth / 2) - (handlerPointer.clientWidth / 2) + 'px';
-            handlerPointer.style.top = (handler.clientHeight / 2) - (handlerPointer.clientHeight / 2) + 'px';
+            handlerPointer.style.top = (handler.clientWidth / 2) - (handlerPointer.clientWidth / 2) + 'px';
 
             //set default properties for some variables
             handlerWidth = handler.offsetWidth;
@@ -162,6 +161,26 @@ function CustomJsSlider() {
                 }
             }
 
+            function onPointerOrMouseMove(e){
+                var distance, leftPos;
+                if (clickedHandlerByMouseFlag) {
+                    distance = parseInt(e.clientX, 10) - startX;
+                    leftPos = filterHandlerPosition(handlerLeftPos + distance);
+//                    handler.style.left = leftPos + 'px';
+                    //the handler fill will be placed under the handler button
+//                    handlerFill.style.width = leftPos + (handler.offsetWidth / 2) + 'px';
+                    updateScopeRangeInterval(leftPos);
+                }
+            }
+
+            function onPointerOrMouseDown(e){
+                clickedHandlerByMouseFlag = true;
+                //get left position of the handler
+                handlerLeftPos = parseInt(handler.style.left, 10);
+                //get X coordinates of touch point
+                startX = parseInt(e.clientX, 10);
+            }
+
             function mouseUp() {
                 document.onmousemove = false;
                 clickedHandlerByMouseFlag = false;
@@ -230,18 +249,35 @@ function CustomJsSlider() {
                 e.stopPropagation();
             }, false);
 
-            //MOUSE CONTROL OVER THE HANDLER
             /**
-             * Getting left position of the handler and X coordinates of touch point
+             * Getting left position of the handler and X coordinates of touch point.
+             * Windows touch down event. It will be deprecated on IE 11, being replaced with pointerdown
+             * @event MSPointerDown
+             */
+            handler.addEventListener('MSPointerDown', onPointerOrMouseDown);
+
+            //MOVING THE HANDLER USING WINDOWS MOBILE DEVICES
+            /**
+             * In order to move the handler successfully, an -ms-touch-action rule with a value of none must be added on
+             * targeted element, otherwise an unexpected event (MSPointerCancel) will be triggered when moving finger too fast.
+             * It will act like a swiping event over the element.
+             * That's because MSPointerCancel will be dispatched when either (1) the system has determined
+             * that a pointer is unlikely to continue to produce events (for example, due to a hardware event),
+             * or (2) after having fired the MSPointerDown event, the pointer is subsequently used to manipulate the page viewport (for example, panning or zooming).
+             */
+            $(handler).css('-ms-touch-action', 'none');
+
+            /**
+             * Windows touch move event. It will be deprecated on IE 11, being replaced with pointermove
+             * @event MSPointerMove
+             */
+            handler.addEventListener('MSPointerMove', onPointerOrMouseMove);
+
+            //MOVING THE HANDLER USING MOUSE
+            /**
              * @event mousedown
              */
-            handler.addEventListener('mousedown', function (e) {
-                clickedHandlerByMouseFlag = true;
-                //get left position of the handler
-                handlerLeftPos = parseInt(handler.style.left, 10);
-                //get X coordinates of touch point
-                startX = parseInt(e.clientX, 10);
-            });
+            handler.addEventListener('mousedown', onPointerOrMouseDown);
 
             /**
              * Moving the handler by mouse.
@@ -250,17 +286,7 @@ function CustomJsSlider() {
              * until the mouse moves back over the dragged element. Adding the event on the document fixes this problem.
              * @event mousemove
              */
-            document.addEventListener('mousemove', function (e) {
-                var distance, leftPos;
-                if (clickedHandlerByMouseFlag) {
-                    distance = parseInt(e.clientX, 10) - startX;
-                    leftPos = filterHandlerPosition(handlerLeftPos + distance);
-//                    handler.style.left = leftPos + 'px';
-                    //the handler fill will be placed under the handler button
-//                    handlerFill.style.width = leftPos + (handler.offsetWidth / 2) + 'px';
-                    updateScopeRangeInterval(leftPos);
-                }
-            });
+            document.addEventListener('mousemove', onPointerOrMouseMove);
 
             /**
              * Removing document event handlers and reset dragging flag so that mouse drag process can start again
@@ -282,6 +308,7 @@ function CustomJsSlider() {
                 $(window).unbind('resize', setHandlerPosition);
             });
 
+            //ANGULAR
             scope.$watch('rangeInterval + minRange + maxRange', function () {
                 rangeInterval = scope.rangeInterval;
                 minRange = scope.minRange;
@@ -289,6 +316,7 @@ function CustomJsSlider() {
                 rangeIncrementFlag = scope.rangeIncrementFlag;
                 setHandlerPosition();
             });
+            //END ANGULAR
         }
     };
 }
